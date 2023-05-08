@@ -8,9 +8,10 @@ job:
   image: artifactory.cloud.cms.gov/docker/alpine:latest
   script:
     - echo "Building application named ${APP_NAME} using dockerfile ${TARGET_DOCKERFILE}"
+    - cat ${TARGET_DOCKERFILE}
   parallel:
     matrix:
-      - APP_NAME: "app-one"
-        TARGET_DOCKERFILE: "Dockerfile.app-one"
-      - APP_NAME: "app-two"
-        TARGET_DOCKERFILE: "Dockerfile.app-two"
+      - APP_NAME: "frontend"
+        TARGET_DOCKERFILE: "frontend/Dockerfile"
+      - APP_NAME: "counter-api"
+        TARGET_DOCKERFILE: "counter-api/Dockerfile"
