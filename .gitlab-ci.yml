@@ -1,4 +1,4 @@
 job:
-  image: artifactory.cloud.cms.gov/alpine:latest
+  image: artifactory.cloud.cms.gov/docker/alpine:latest
   script:
     - echo "Howdy"
