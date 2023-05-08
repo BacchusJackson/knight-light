@@ -1,17 +1,27 @@
-# Check for variable prefix
-# Problem, I need a way to define multiple projects
-# Options:
-#  - Configuration by some kind of manifest file that can be read by the pipeline?
-#  - Prefixing env variables
-#  - 
-job:
-  image: artifactory.cloud.cms.gov/docker/alpine:latest
-  script:
-    - echo "Building application named ${APP_NAME} using dockerfile ${TARGET_DOCKERFILE}"
-    - cat ${TARGET_DOCKERFILE}
+variables:
+  TEMPLATE_VERSION: "feat/mono-repo-support"
+
+sast-pipeline:
+  needs: []
+  variables:
+    SCAN_GITLEAKS: "true"
+    SCAN_SEMGREP: "true"
+  trigger:
+    strategy: depend
+    include:
+      - project: "devops-pipelines/pipeline-triggers"
+        ref: ${TEMPLATE_VERSION}
+        file: "sast.yaml"
   parallel:
     matrix:
-      - APP_NAME: "frontend"
-        TARGET_DOCKERFILE: "frontend/Dockerfile"
-      - APP_NAME: "counter-api"
-        TARGET_DOCKERFILE: "counter-api/Dockerfile"
+      - APP_NAME: ["frontend", "counter-api"]
+        TARGET_DIRECTORY: ["frontend", "counter-api"]
+        SEMGREP_RULES_ADD: 
+          - "p/javascript" 
+          - "p/golang"
+        ARTIFACT_FOLDER: 
+          - ".artifacts/frontend"
+          - ".artifacts/counter-api"
+        APP_IMAGE_SRC: 
+          - ${BC_IMAGE_REPO}/${CI_PROJECT_PATH}/frontend
+          - ${BC_IMAGE_REPO}/${CI_PROJECT_PATH}/counter-api
