@@ -14,14 +14,13 @@ sast-pipeline:
         file: "sast.yaml"
   parallel:
     matrix:
-      - APP_NAME: ["frontend", "counter-api"]
-        TARGET_DIRECTORY: ["frontend", "counter-api"]
-        SEMGREP_RULES_ADD: 
-          - "p/javascript" 
-          - "p/golang"
-        ARTIFACT_FOLDER: 
-          - ".artifacts/frontend"
-          - ".artifacts/counter-api"
-        APP_IMAGE_SRC: 
-          - ${BC_IMAGE_REPO}/${CI_PROJECT_PATH}/frontend
-          - ${BC_IMAGE_REPO}/${CI_PROJECT_PATH}/counter-api
+      - APP_NAME: "frontend"
+        TARGET_DIRECTORY: "frontend"
+        SEMGREP_RULES_ADD: "p/javascript" 
+        ARTIFACT_FOLDER: ".artifacts/frontend"
+        APP_IMAGE_SRC: ${BC_IMAGE_REPO}/${CI_PROJECT_PATH}/frontend
+      - APP_NAME: "counter-api"
+        TARGET_DIRECTORY: "counter-api"
+        SEMGREP_RULES_ADD: "p/golang" 
+        ARTIFACT_FOLDER: ".artifacts/counter-api"
+        APP_IMAGE_SRC: ${BC_IMAGE_REPO}/${CI_PROJECT_PATH}/counter-api
