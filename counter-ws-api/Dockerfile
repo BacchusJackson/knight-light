@@ -11,10 +11,8 @@ FROM artifactory.cloud.cms.gov/docker/alpine:latest
 
 WORKDIR /app
 
-ENV APP_PORT 5000
+EXPOSE 3000
 
-EXPOSE ${PORT}
+COPY --from=builder /app/bin/counter-ws-api .
 
-COPY --from=builder /app/bin/counter-api .
-
-CMD ["/app/counter-api"]
+CMD ["/app/counter-ws-api"]

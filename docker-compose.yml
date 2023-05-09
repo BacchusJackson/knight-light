@@ -1,0 +1,45 @@
+version: '3'
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - COUNTER_API="http://localhost:5252"
+        - COUNTER_WS_API="ws://localhost:3000"
+    ports:
+      - "8081:80"
+    depends_on:
+      - counter-api
+    networks:
+      - mono-network
+
+  counter-api:
+    build: ./counter-api
+    environment:
+      - APP_PORT=5252
+      - APP_ENV=local
+    networks:
+      - mono-network
+    ports:
+      - "5252:5252"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5252/status || exit 1"]
+      interval: 30s
+      timeout: 1s
+      retries: 3
+
+  counter-ws-api:
+    build: ./counter-ws-api
+    networks:
+      - mono-network
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/status || exit 1"]
+      interval: 30s
+      timeout: 1s
+      retries: 3
+
+networks:
+  mono-network:

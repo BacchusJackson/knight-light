@@ -2,19 +2,19 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
 var globalCounter *Counter
 
+
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "5000"
-	}
+  log.SetOutput(os.Stdout)
 
 	globalCounter = &Counter{
 		CurrentCount: 0,
@@ -24,9 +24,17 @@ func main() {
 	http.HandleFunc("/add", PostAdd)
 	http.HandleFunc("/status", GetStatus)
 
-  if err := http.ListenAndServe(":" + port, nil); err != nil {
-    panic(err)
+  port, err := strconv.Atoi(os.Getenv("APP_PORT"))
+  if err != nil {
+    log.Fatalf("APP_PORT env variable must be set like '5000': %v\n", err)
   }
+
+  log.Printf("Starting Counter API on port %d", port) 
+
+  if err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil); err != nil {
+    log.Fatal(err)
+	}
+
 }
 
 type AddRequest struct {
@@ -39,6 +47,7 @@ type Counter struct {
 }
 
 func GetStatus(w http.ResponseWriter, r *http.Request) {
+  log.Printf("GET status request received from %s\n", r.RemoteAddr)
 	writeStatus(w)
 }
 
@@ -66,6 +75,7 @@ func PostAdd(w http.ResponseWriter, r *http.Request) {
 
 func writeStatus(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
+  addHeaders(w)
 
 	if err := json.NewEncoder(w).Encode(globalCounter); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -73,3 +83,14 @@ func writeStatus(w http.ResponseWriter) {
 		return
 	}
 }
+
+
+func addHeaders(w http.ResponseWriter) {
+  if os.Getenv("APP_ENV") == "local" {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+  }
+}
+
+
