@@ -14,13 +14,26 @@ sast-pipeline:
         file: "sast.yaml"
   parallel:
     matrix:
-      - APP_NAME: "frontend"
-        TARGET_DIRECTORY: "frontend"
+      - APP_NAME: ["frontend", "counter-api"]
+        TARGET_DIRECTORY: ${APP_NAME}
         SEMGREP_RULES_ADD: "p/javascript" 
-        ARTIFACT_FOLDER: ".artifacts/frontend"
-        APP_IMAGE_SRC: ${BC_IMAGE_REPO}/${CI_PROJECT_PATH}/frontend
-      - APP_NAME: "counter-api"
-        TARGET_DIRECTORY: "counter-api"
-        SEMGREP_RULES_ADD: "p/golang" 
-        ARTIFACT_FOLDER: ".artifacts/counter-api"
-        APP_IMAGE_SRC: ${BC_IMAGE_REPO}/${CI_PROJECT_PATH}/counter-api
+        ARTIFACT_FOLDER: ".artifacts/${APP_NAME}"
+        APP_IMAGE_SRC: ${BC_IMAGE_REPO}/${CI_PROJECT_PATH}/${APP_NAME}
+
+delivery-pipeline:
+  needs: ["sast-pipeline"]
+  variables:
+    FETCH_SAST_ARTIFACTS: "true"
+  trigger:
+    strategy: depend
+    include:
+      - project: "devops-pipelines/pipeline-triggers"
+        ref: ${TEMPLATE_VERSION}
+        file: "sast.yaml"
+  parallel:
+    matrix:
+      - APP_NAME: ["frontend", "counter-api"]
+        TARGET_DOCKERFILE: ${APP_NAME}/Dockerfile
+        TARGET_BUILD_DIR: ${APP_NAME}
+        APP_IMAGE_SRC: ${BC_IMAGE_REPO}/${CI_PROJECT_PATH}/${APP_NAME}
+
