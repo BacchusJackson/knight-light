@@ -1,32 +1,47 @@
 let API_GET_STATUS = COUNTER_API_ENDPOINT ? `${COUNTER_API_ENDPOINT}/status` : undefined;
 let API_POST_ADD = COUNTER_API_ENDPOINT ? `${COUNTER_API_ENDPOINT}/add` : undefined;
-let API_WS = COUNTER_WS_API_ENDPOINT ? `${COUNTER_WS_API_ENDPOINT}/ws` : undefined;
+// let API_WS = COUNTER_WS_API_ENDPOINT ? `${COUNTER_WS_API_ENDPOINT}/ws` : undefined;
 let socket
 
 // Run Update every 1 s
 setInterval(() => {
-  update();
+  updateAll();
 }, 5000);
 
 // Increment on the server and update
-const increment = async (i) => {
+const increment = async (i, element) => {
   console.log(`Sending Request with Count: ${i}`);
   const addResData = await requestAdd(i);
   console.log(addResData);
 
-  console.log(`Sending WS Message with Count: ${i}`);
-  socket.send(JSON.stringify({count: i}));
+  // console.log(`Sending WS Message with Count: ${i}`);
+  // socket.send(JSON.stringify({count: i}));
 
-  update();
+  update(element);
 };
 
 
 // GET the status on the server
-const update = async () => {
+const update = async (element) => {
 
   const data = await requestStatus();
   console.log(data);
-  document.getElementById('count').innerHTML =`API Server Total: ${data.currentCount.toString() || "-"}`;
+  document.getElementById(element).innerHTML = counterString(data);
+}
+
+const updateAll = async() => {
+  const data = await requestStatus();
+  console.log(data);
+  document.getElementById("count-1").innerHTML =counterString(data);
+  document.getElementById("count-2").innerHTML =counterString(data);
+}
+
+const counterString = (data) => {
+  console.log(data.lastUpdated)
+  const date = new Date(data.lastUpdated);
+  const month = date.toLocaleString('en-US', { month: 'short', timeZone: "America/New_York" });
+  const dateStr = `${month} ${date.getDate()}, ${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}`
+  return `Total: ${data.currentCount.toString() || '-'} @ ${dateStr}`
 }
 
 
@@ -42,8 +57,8 @@ const requestStatus = async () => {
     return response.json();
 
   } catch (error) {
-      console.error(error);
-      return {};
+    console.error(error);
+    return {};
   }
 
 }
@@ -66,21 +81,21 @@ const requestAdd = async (i) => {
   }
 }
 
-window.addEventListener("load", (event) => {
-  console.log("Window Loaded")
-  console.log(`Connecting to websocket ${API_WS}...`) 
-
-  socket = new WebSocket(API_WS)
-
-
-  socket.addEventListener("open", (event) => {
-    socket.send("Knight Light Mono Connected")
-  })
-
-  socket.addEventListener("message", (event) => {
-    console.log(`Message from Server: ${event.Data}`)
-  })
-  
-})
+// window.addEventListener("load", (event) => {
+//   console.log("Window Loaded")
+//   console.log(`Connecting to websocket ${API_WS}...`) 
+//
+//   socket = new WebSocket(API_WS)
+//
+//
+//   socket.addEventListener("open", (event) => {
+//     socket.send("Knight Light Mono Connected")
+//   })
+//
+//   socket.addEventListener("message", (event) => {
+//     console.log(`Message from Server: ${event.Data}`)
+//   })
+//   
+// })
 
 

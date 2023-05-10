@@ -1,22 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Knight Light Mono Frontend</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
+  <h1>Knight Light Mono App</h1>
   <div class="container">
-    <h1>Knight Light Mono</h1>
-    <div class="button-container">
-      <button id="button1" onclick="increment(1)">Add 1</button>
-      <button id="button2" onclick="increment(5)">Add 5</button>
-      <button id="button3" onclick="increment(10)">Add 10</button>
+    <div class="app-box">
+      <h2>Counter API using REST</h2>
+      <div class="button-container">
+        <button id="button1" onclick="increment(1, 'count-1')">Add 1</button>
+        <button id="button2" onclick="increment(5, 'count-1')">Add 5</button>
+        <button id="button3" onclick="increment(10, 'count-1')">Add 10</button>
+        <button id="button4" onclick="increment(100, 'count-1')">Add 100</button>
+      </div>
+      <div id="count-1">-</div>
     </div>
-    <div id="count"></div>
+    <div class="app-box">
+      <h2>Counter API using REST 2</h2>
+      <div class="button-container">
+        <button id="button5" onclick="increment(1, 'count-2')">Add 1</button>
+        <button id="button6" onclick="increment(5, 'count-2')">Add 5</button>
+        <button id="button7" onclick="increment(10, 'count-2')">Add 10</button>
+        <button id="button8" onclick="increment(100, 'count-2')">Add 100</button>
+      </div>
+      <div id="count-2">-</div>
+    </div>
+    <div class="app-box">
+      <p>Box 3</p>
+    </div>
+    <div class="app-box">
+      <p>Box 4</p>
+    </div>
   </div>
+  <!-- <div class="container"> -->
+  <!-- </div> -->
   <script src="config.js"></script>
   <script src="script.js"></script>
 </body>
-</html>
 
+</html>

@@ -6,11 +6,13 @@ services:
       dockerfile: Dockerfile
       args:
         - COUNTER_API="http://localhost:5252"
-        - COUNTER_WS_API="ws://localhost:3000"
+        - CHAT_API="ws://localhost:3000"
     ports:
       - "8081:80"
     depends_on:
       - counter-api
+    volumes:
+      - $PWD/frontend/src/:/var/www/kl/ 
     networks:
       - mono-network
 

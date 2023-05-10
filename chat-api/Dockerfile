@@ -13,6 +13,6 @@ WORKDIR /app
 
 EXPOSE 3000
 
-COPY --from=builder /app/bin/counter-ws-api .
+COPY --from=builder /app/bin/chat-api .
 
-CMD ["/app/counter-ws-api"]
+CMD ["/app/chat-api"]
