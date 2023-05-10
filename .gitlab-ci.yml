@@ -1,7 +1,10 @@
 job:
   image: artifactory.cloud.cms.gov/docker/alpine:latest
   script:
-    - echo 'Test test test'
+    - echo '${APP_NAME}'
+  parallel:
+    matrix:
+      - APP_NAME: ["frontend", "counter-api", "counter-ws-api"]
 # variables:
 #   TEMPLATE_VERSION: "feat/mono-repo-support"
 #
