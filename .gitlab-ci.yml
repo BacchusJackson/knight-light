@@ -1,31 +1,24 @@
-job:
-  image: artifactory.cloud.cms.gov/docker/alpine:latest
-  script:
-    - echo '${APP_NAME}'
+variables:
+  TEMPLATE_VERSION: "feat/mono-repo-support"
+
+sast-pipeline:
+  needs: []
+  variables:
+    SCAN_GITLEAKS: "true"
+    SCAN_SEMGREP: "true"
+  trigger:
+    strategy: depend
+    include:
+      - project: "devops-pipelines/pipeline-triggers"
+        ref: ${TEMPLATE_VERSION}
+        file: "sast.yaml"
   parallel:
     matrix:
       - APP_NAME: ["frontend", "counter-api", "counter-ws-api"]
-# variables:
-#   TEMPLATE_VERSION: "feat/mono-repo-support"
-#
-# sast-pipeline:
-#   needs: []
-#   variables:
-#     SCAN_GITLEAKS: "true"
-#     SCAN_SEMGREP: "true"
-#   trigger:
-#     strategy: depend
-#     include:
-#       - project: "devops-pipelines/pipeline-triggers"
-#         ref: ${TEMPLATE_VERSION}
-#         file: "sast.yaml"
-#   parallel:
-#     matrix:
-#       - APP_NAME: ["frontend", "counter-api", "counter-ws-api"]
-#         TARGET_DIRECTORY: ${APP_NAME}
-#         SEMGREP_RULES_ADD: "p/javascript p/golang" 
-#         ARTIFACT_FOLDER: ".artifacts/${APP_NAME}"
-#         APP_IMAGE_SRC: ${BC_IMAGE_REPO}/${CI_PROJECT_PATH}/${APP_NAME}
+        TARGET_DIRECTORY: ${APP_NAME}
+        SEMGREP_RULES_ADD: "p/javascript p/golang" 
+        ARTIFACT_FOLDER: ".artifacts/${APP_NAME}"
+        APP_IMAGE_SRC: ${BC_IMAGE_REPO}/${CI_PROJECT_PATH}/${APP_NAME}
 #
 # delivery-pipeline:
 #   needs: ["sast-pipeline"]
