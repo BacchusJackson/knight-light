@@ -13,7 +13,7 @@ WORKDIR /app
 
 ENV APP_PORT 5000
 
-EXPOSE ${PORT}
+EXPOSE 5000
 
 COPY --from=builder /app/bin/counter-api .
 
