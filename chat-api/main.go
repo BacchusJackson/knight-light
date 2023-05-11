@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 
@@ -13,6 +14,8 @@ var CancelChan chan struct{}
 var UserChan chan User
 
 func main() {
+	addr := flag.String("addr", ":5000", "http address and port")
+	flag.Parse()
 
 	MessageChan = make(chan Message)
 	CancelChan = make(chan struct{})
@@ -20,15 +23,17 @@ func main() {
 
 	go chatListener(MessageChan, CancelChan, UserChan)
 
-	port := 3000
 	app := fiber.New()
 
 	app.Use("/ws", wsMiddleware)
 	app.Get("/ws", websocket.New(handleWebSocket))
 
-	app.Get("/health", healthCheck)
+	app.Get("/health", func(c *fiber.Ctx) error {
 
-	log.Fatal(app.Listen(fmt.Sprintf(":%d", port)))
+		return c.JSON(fiber.Map{"status": "Healthy"})
+	})
+
+	log.Fatal(app.Listen(*addr))
 
 }
 
@@ -40,13 +45,9 @@ func wsMiddleware(c *fiber.Ctx) error {
 	return c.Status(403).SendString("Request origin not allowed")
 }
 
-func healthCheck(c *fiber.Ctx) error {
-	return c.JSON(map[string]string{"status": "good"})
-}
-
 func handleWebSocket(c *websocket.Conn) {
 
-	err := c.WriteMessage(websocket.TextMessage, []byte("Welcome to Knight Light Mono Chat! What is your username?"))
+	err := c.WriteMessage(websocket.TextMessage, []byte("[server] Welcome to Knight Light Mono Chat! What is your username?"))
 	if err != nil {
 		log.Println(err)
 		return
@@ -65,10 +66,6 @@ func handleWebSocket(c *websocket.Conn) {
 	}
 	username := string(runes)
 
-	if err := c.WriteMessage(websocket.TextMessage, []byte("Username saved. Happy chatting!")); err != nil {
-		log.Println(err)
-		return
-	}
 	UserChan <- User{username: username, conn: c, alive: true}
 
 	for {
@@ -92,7 +89,7 @@ func chatListener(msgChan chan Message, cancelChan chan struct{}, userChan chan 
 		case msg := <-msgChan:
 			go func() {
 				for _, user := range users {
-					if msg.user == user.username || user.alive == false {
+					if user.alive == false {
 						continue
 					}
 					err := user.conn.WriteMessage(websocket.TextMessage, msg.Bytes())
@@ -107,12 +104,23 @@ func chatListener(msgChan chan Message, cancelChan chan struct{}, userChan chan 
 			log.Printf("Chat Listener Cancelled")
 			return
 		case newUser := <-userChan:
+			msg := "[server] Happy chatting!"
+
 			for _, user := range users {
 				if user.username == newUser.username {
-          log.Printf("User: %s already registered, setting to alive!\n", user.username)
+					log.Printf("User: %s already registered, setting to alive!\n", user.username)
 					user.alive = true
+					msg = fmt.Sprintf("[server] Welcome back %s", user.username)
+					newUser = user
+					break
 				}
 			}
+
+			if err := newUser.conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
+				log.Println(err)
+				return
+			}
+
 			users = append(users, newUser)
 		}
 	}

@@ -15,4 +15,4 @@ EXPOSE 3000
 
 COPY --from=builder /app/bin/chat-api .
 
-CMD ["/app/chat-api"]
+CMD ["/app/chat-api", "-addr", ":3000"]

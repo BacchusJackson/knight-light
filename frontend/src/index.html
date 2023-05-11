@@ -10,30 +10,35 @@
 <body>
   <h1>Knight Light Mono App</h1>
   <div class="container">
-    <div class="app-box">
+    <div class="app-container">
       <h2>Counter API using REST</h2>
       <div class="button-container">
-        <button id="button1" onclick="increment(1, 'count-1')">Add 1</button>
-        <button id="button2" onclick="increment(5, 'count-1')">Add 5</button>
-        <button id="button3" onclick="increment(10, 'count-1')">Add 10</button>
-        <button id="button4" onclick="increment(100, 'count-1')">Add 100</button>
+        <button class="increment" onclick="increment(1, 'count-1')">Add 1</button>
+        <button class="increment" onclick="increment(5, 'count-1')">Add 5</button>
+        <button class="increment" onclick="increment(10, 'count-1')">Add 10</button>
+        <button class="increment" onclick="increment(100, 'count-1')">Add 100</button>
       </div>
       <div id="count-1">-</div>
     </div>
-    <div class="app-box">
+    <div class="app-container">
       <h2>Counter API using REST 2</h2>
       <div class="button-container">
-        <button id="button5" onclick="increment(1, 'count-2')">Add 1</button>
-        <button id="button6" onclick="increment(5, 'count-2')">Add 5</button>
-        <button id="button7" onclick="increment(10, 'count-2')">Add 10</button>
-        <button id="button8" onclick="increment(100, 'count-2')">Add 100</button>
+        <button class="increment" onclick="increment(1, 'count-2')">Add 1</button>
+        <button class="increment" onclick="increment(5, 'count-2')">Add 5</button>
+        <button class="increment" onclick="increment(10, 'count-2')">Add 10</button>
+        <button class="increment" onclick="increment(100, 'count-2')">Add 100</button>
       </div>
       <div id="count-2">-</div>
     </div>
-    <div class="app-box">
-      <p>Box 3</p>
+    <div class="app-container">
+      <h2>Chat API using websockets</h2>
+      <div id="chat-box"></div>
+        <div class="chat-input-container">
+      <input type="text" placeholder="Type here..." id="chat-input">
+        <button class="chat-send" id="chat-send-button" onclick="sendMessage()">Send</button>
+        </div>
     </div>
-    <div class="app-box">
+    <div class="app-container">
       <p>Box 4</p>
     </div>
   </div>

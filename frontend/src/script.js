@@ -1,6 +1,7 @@
 let API_GET_STATUS = COUNTER_API_ENDPOINT ? `${COUNTER_API_ENDPOINT}/status` : undefined;
 let API_POST_ADD = COUNTER_API_ENDPOINT ? `${COUNTER_API_ENDPOINT}/add` : undefined;
-// let API_WS = COUNTER_WS_API_ENDPOINT ? `${COUNTER_WS_API_ENDPOINT}/ws` : undefined;
+let CHAT_API = CHAT_API_ENDPOINT ? `${CHAT_API_ENDPOINT}/ws` : undefined;
+
 let socket
 
 // Run Update every 1 s
@@ -81,21 +82,37 @@ const requestAdd = async (i) => {
   }
 }
 
-// window.addEventListener("load", (event) => {
-//   console.log("Window Loaded")
-//   console.log(`Connecting to websocket ${API_WS}...`) 
-//
-//   socket = new WebSocket(API_WS)
-//
-//
-//   socket.addEventListener("open", (event) => {
-//     socket.send("Knight Light Mono Connected")
-//   })
-//
-//   socket.addEventListener("message", (event) => {
-//     console.log(`Message from Server: ${event.Data}`)
-//   })
-//   
-// })
+const sendMessage = async () => {
+  const inputBox = document.getElementById("chat-input")
+  const msg = inputBox.value
+
+  inputBox.value = ""
+
+  socket.send(msg);
+
+}
+
+document.getElementById("chat-input").addEventListener("keyup", event => {
+  if(event.key !== "Enter") return; // Use `.key` instead.
+  document.getElementById("chat-send-button").click();
+  event.preventDefault(); // No need to `return false;`.
+});
+
+window.addEventListener("load", (event) => {
+  document.getElementById("chat-box").innerHTML = `[client] Connecting to websocket ${CHAT_API}...<br>`
+
+  socket = new WebSocket(CHAT_API)
+
+  socket.addEventListener("open", (event) => {
+    document.getElementById("chat-box").innerHTML += "[client] Chat API Websocket connected!<br>"
+  })
+
+  socket.addEventListener("message", (event) => {
+    console.log(`Message from Server: ${event.data}`)
+    const chatBox = document.getElementById("chat-box")
+    chatBox.innerHTML = `${chatBox.innerHTML}<br> ${event.data}`
+  })
+
+})
 
 

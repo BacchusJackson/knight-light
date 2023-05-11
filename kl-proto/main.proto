@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option go_package = "./kl-proto";
+
+message CountRequest { int64 count = 1; }
+
+message CountResponse {
+  int64 count = 1;
+  int32 lastUpdate = 2;
+}
+
+message EventRequest { string server = 1; }
+message EventResponse { bool success = 1; }
+message EventTotalResponse { int64 total = 1; }
+message Empty {};
+
+service CounterService {
+  rpc Add(CountRequest) returns (CountResponse);
+  rpc Total(Empty) returns (CountResponse);
+}
+
+service EventService {
+  rpc Add(EventRequest) returns (EventResponse);
+  rpc Total(Empty) returns (EventTotalResponse);
+}

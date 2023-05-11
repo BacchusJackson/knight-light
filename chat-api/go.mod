@@ -1,4 +1,4 @@
-module chat-api
+module batcave/knight-light-mono/chat-api
 
 go 1.20
 
