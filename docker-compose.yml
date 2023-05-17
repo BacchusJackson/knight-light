@@ -16,8 +16,11 @@ services:
     networks:
       - mono-network
 
-  counter-api:
-    build: ./counter-api
+  database-api:
+    build:
+      context: ./database-api
+      dockerfile: dev.Dockerfile
+    command: "/app/database-api --addr :3000"
     depends_on:
       - redis-server
     environment:
@@ -25,32 +28,47 @@ services:
       REDIS_PORT: 6379
     networks:
       - mono-network
+    expose:
+      - 3000
+
+  counter-api:
+    build:
+      context: ./counter-api
+      dockerfile: dev.Dockerfile
+    command: "/app/counter-api --addr :3020"
+    depends_on:
+      - database-api
+    environment:
+      DATABASE_API: database-api:3000
+    networks:
+      - mono-network
     ports:
-      - "3020:3000"
+      - "3020:3020"
 
   chat-api:
-    build: ./chat-api
+    build:
+      context: ./chat-api
+      dockerfile: dev.Dockerfile
+    command: "/app/chat-api --addr :3030"
+    depends_on:
+      - database-api
     networks:
       - mono-network
     environment:
-      REDIS_HOST: redis-server
-      REDIS_PORT: 6379
-    depends_on:
-      - redis-server
+      DATABASE_API: database-api:3000
     ports:
-      - "3030:3000"
+      - "3030:3030"
 
   redis-server:
     image: redis:alpine
     restart: always
     command: redis-server --save 20 1 --loglevel warning
     ports:
-      - '6379:6379'
+      - "6379:6379"
     volumes:
       - kl-mono:/data
     networks:
       - mono-network
-
 
 networks:
   mono-network:

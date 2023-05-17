@@ -4,28 +4,35 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"sync"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/websocket/v2"
 )
 
 var MessageChan chan Message
 var CancelChan chan struct{}
-var UserChan chan User
+
+var users *Users
 
 func main() {
 	addr := flag.String("addr", ":5000", "http address and port")
 	flag.Parse()
 
 	MessageChan = make(chan Message)
-	CancelChan = make(chan struct{})
-	UserChan = make(chan User)
 
-	go chatListener(MessageChan, CancelChan, UserChan)
+	users = &Users{users: make([]*User, 0)}
+
+	go messageWorker()
 
 	app := fiber.New()
 
-	app.Use("/ws", wsMiddleware)
+	app.Use(logger.New())
+	// Allow Localhost request origin connection
+	app.Use(cors.New())
+
 	app.Get("/ws", websocket.New(handleWebSocket))
 
 	app.Get("/health", func(c *fiber.Ctx) error {
@@ -35,14 +42,6 @@ func main() {
 
 	log.Fatal(app.Listen(*addr))
 
-}
-
-func wsMiddleware(c *fiber.Ctx) error {
-	if c.Get("host") == "localhost:3000" {
-		c.Locals("Host", "Localhost:3000")
-		return c.Next()
-	}
-	return c.Status(403).SendString("Request origin not allowed")
 }
 
 func handleWebSocket(c *websocket.Conn) {
@@ -66,9 +65,12 @@ func handleWebSocket(c *websocket.Conn) {
 	}
 	username := string(runes)
 
-	UserChan <- User{username: username, conn: c, alive: true}
+	user := users.Register(username, c)
+
+	MessageChan <- NewMessage("server", []byte(fmt.Sprintf("User %s connected\n", user.username)))
 
 	for {
+		log.Println(user.username, ": Starting Message Loop")
 		_, msgBytes, err := c.ReadMessage()
 
 		if err != nil {
@@ -76,53 +78,18 @@ func handleWebSocket(c *websocket.Conn) {
 			return
 		}
 
+		msg := NewMessage(user.username, msgBytes)
+		log.Println(msg)
+
 		MessageChan <- NewMessage(username, msgBytes)
 	}
+
 }
 
-// ChatListener will listen for new messages and send them to other user socket connections
-func chatListener(msgChan chan Message, cancelChan chan struct{}, userChan chan User) {
-	users := []User{}
-
+func messageWorker() {
 	for {
-		select {
-		case msg := <-msgChan:
-			go func() {
-				for _, user := range users {
-					if user.alive == false {
-						continue
-					}
-					err := user.conn.WriteMessage(websocket.TextMessage, msg.Bytes())
-					if err != nil {
-						log.Printf("Message to user: %s failed: %v. User is no longer alive\n", user.username, err)
-						user.alive = false
-					}
-				}
-
-			}()
-		case <-cancelChan:
-			log.Printf("Chat Listener Cancelled")
-			return
-		case newUser := <-userChan:
-			msg := "[server] Happy chatting!"
-
-			for _, user := range users {
-				if user.username == newUser.username {
-					log.Printf("User: %s already registered, setting to alive!\n", user.username)
-					user.alive = true
-					msg = fmt.Sprintf("[server] Welcome back %s", user.username)
-					newUser = user
-					break
-				}
-			}
-
-			if err := newUser.conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
-				log.Println(err)
-				return
-			}
-
-			users = append(users, newUser)
-		}
+		receivedMsg := <-MessageChan
+		users.SendAll(receivedMsg)
 	}
 }
 
@@ -130,6 +97,50 @@ type User struct {
 	username string
 	conn     *websocket.Conn
 	alive    bool
+}
+
+func (u *User) Send(msg Message) {
+	err := u.conn.WriteMessage(websocket.TextMessage, msg.Bytes())
+	if err != nil {
+    u.alive = false
+		log.Printf("User: %+v error: %s\n", u, err)
+	}
+}
+
+type Users struct {
+	users []*User
+	mu    sync.Mutex
+}
+
+func (u *Users) Register(username string, conn *websocket.Conn) *User {
+
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	log.Printf("Registering username: %s\n", username)
+
+	for i := range u.users {
+		if username != u.users[i].username {
+			continue
+		}
+
+		u.users[i].alive = true
+		log.Printf("Existing user: %s\n", username)
+		return u.users[i]
+	}
+
+	newUser := &User{username: username, conn: conn, alive: true}
+	u.users = append(u.users, newUser)
+
+	log.Printf("Registered username: %s\n", username)
+	return newUser
+}
+
+func (u *Users) SendAll(msg Message) {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	for _, user := range u.users {
+		user.Send(msg)
+	}
 }
 
 type Message struct {

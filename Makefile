@@ -1,13 +1,14 @@
-.PHONY: proto-chat-api proto-counter-api proto-all
+.PHONY: clean tidy build-alpine
 
 clean:
-	rm -rf chat-api/kl-proto/*
-	rm -rf counter-api/kl-proto/*
+	rm -rf chat-api/bin/*
+	rm -rf counter-api/bin/*
 
-proto-chat-api:
-	protoc --go_out=chat-api --go_opt=paths=source_relative --go-grpc_out=./chat-api --go-grpc_opt=paths=source_relative ./kl-proto/*.proto
+tidy:
+	cd chat-api && go mod tidy
+	cd counter-api && go mod tidy
 
-proto-counter-api:
-	protoc --go_out=counter-api --go_opt=paths=source_relative --go-grpc_out=./counter-api --go-grpc_opt=paths=source_relative ./kl-proto/*.proto
+build-alpine:
+	cd chat-api && GOOS=linux GOARCH=amd64 go build -o bin/ ./...
+	cd counter-api && GOOS=linux GOARCH=amd64 go build -o bin/ ./...
 
-proto-all: proto-chat-api proto-counter-api
