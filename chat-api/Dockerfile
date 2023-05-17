@@ -16,17 +16,13 @@ EXPOSE 3000
 
 ARG UID=10001
 
-RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/nonexistent" \
-    --shell "/sbin/nologin" \
-    --no-create-home \
-    --uid "${UID}" \
-    appuser
+COPY --from=builder /src/bin/chat-api .
+
+RUN adduser --disabled-password --gecos "" --home "/nonexistent" \
+    --shell "/sbin/nologin" --no-create-home --uid "${UID}" appuser && \
+    chown -R appuser:appuser /app
 
 USER appuser
 
-COPY --from=builder --chown=appuser:appuser /src/bin/chat-api .
 
 CMD ["/app/chat-api", "-addr", ":3000"]
