@@ -28,6 +28,7 @@ delivery-pipeline:
   stage: delivery
   variables:
     FETCH_SAST_ARTIFACTS: "true"
+    PUSH_LATEST: "latest"
   trigger:
     strategy: depend
     include:
