@@ -14,6 +14,6 @@ RUN apk add --no-cach libc6-compat && \
   echo "const CHAT_API_ENDPOINT = ${CHAT_API};" >> /var/www/kl/config.js
     
 
-EXPOSE 80
+EXPOSE 8080
 
 CMD ["nginx", "-g", "daemon off;"]
