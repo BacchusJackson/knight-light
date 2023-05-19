@@ -8,7 +8,7 @@ services:
         - COUNTER_API="http://localhost:3020"
         - CHAT_API="ws://localhost:3030"
     ports:
-      - "8081:80"
+      - "8081:8080"
     depends_on:
       - counter-api
     volumes:
@@ -16,30 +16,11 @@ services:
     networks:
       - mono-network
 
-  database-api:
-    build:
-      context: ./database-api
-      dockerfile: dev.Dockerfile
-    command: "/app/database-api --addr :3000"
-    depends_on:
-      - redis-server
-    environment:
-      REDIS_HOST: redis-server
-      REDIS_PORT: 6379
-    networks:
-      - mono-network
-    expose:
-      - 3000
-
   counter-api:
     build:
       context: ./counter-api
-      dockerfile: dev.Dockerfile
+      dockerfile: Dockerfile
     command: "/app/counter-api --addr :3020"
-    depends_on:
-      - database-api
-    environment:
-      DATABASE_API: database-api:3000
     networks:
       - mono-network
     ports:
@@ -48,31 +29,12 @@ services:
   chat-api:
     build:
       context: ./chat-api
-      dockerfile: dev.Dockerfile
+      dockerfile: Dockerfile
     command: "/app/chat-api --addr :3030"
-    depends_on:
-      - database-api
     networks:
       - mono-network
-    environment:
-      DATABASE_API: database-api:3000
     ports:
       - "3030:3030"
 
-  redis-server:
-    image: redis:alpine
-    restart: always
-    command: redis-server --save 20 1 --loglevel warning
-    ports:
-      - "6379:6379"
-    volumes:
-      - kl-mono:/data
-    networks:
-      - mono-network
-
 networks:
   mono-network:
-
-volumes:
-  kl-mono:
-    driver: local

@@ -1,6 +1,7 @@
 stages:
   - sast
   - delivery
+  - deploy
 
 variables:
   TEMPLATE_VERSION: "feat/mono-repo-support"
@@ -26,6 +27,25 @@ sast-pipeline:
 
 delivery-pipeline:
   stage: delivery
+  variables:
+    FETCH_SAST_ARTIFACTS: "true"
+    PUSH_LATEST: "true"
+  trigger:
+    strategy: depend
+    include:
+      - project: "devops-pipelines/pipeline-triggers"
+        ref: ${TEMPLATE_VERSION}
+        file: "delivery.yaml"
+  parallel:
+    matrix:
+      - APP_NAME: [ "frontend", "counter-api", "chat-api" ]
+        TARGET_DOCKERFILE: ${APP_NAME}/Dockerfile
+        TARGET_BUILD_DIR: ${APP_NAME}
+        APP_IMAGE_SRC: ${BC_IMAGE_REPO}/${CI_PROJECT_PATH}/${APP_NAME}
+
+
+deployment-pipeline:
+  stage: deploy
   variables:
     FETCH_SAST_ARTIFACTS: "true"
     PUSH_LATEST: "true"
